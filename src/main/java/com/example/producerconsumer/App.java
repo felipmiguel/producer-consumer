@@ -18,9 +18,7 @@ public class App {
         ProducerConsumerConfig config = new ProducerConsumerConfig(
             2,    // producers
             3,    // consumers
-            50,   // queue capacity
-            500,  // producer delay (ms)
-            800   // consumer delay (ms)
+            50   // queue capacity
         );
         
         System.out.println("Configuration: " + config);

@@ -47,13 +47,13 @@ public class DefaultProducerConsumerService<T extends Item<?>> implements Produc
         // Start producer threads
         for (int i = 0; i < config.getNumberOfProducers(); i++) {
             final int producerId = i;
-            producerExecutor.submit(() -> runProducer(producerId, producer, config.getProducerDelayMs()));
+            producerExecutor.submit(() -> runProducer(producerId, producer));
         }
         
         // Start consumer threads
         for (int i = 0; i < config.getNumberOfConsumers(); i++) {
             final int consumerId = i;
-            consumerExecutor.submit(() -> runConsumer(consumerId, consumer, config.getConsumerDelayMs()));
+            consumerExecutor.submit(() -> runConsumer(consumerId, consumer));
         }
     }
     
@@ -94,17 +94,13 @@ public class DefaultProducerConsumerService<T extends Item<?>> implements Produc
         );
     }
     
-    private void runProducer(int producerId, Supplier<T> producer, long delayMs) {
+    private void runProducer(int producerId, Supplier<T> producer) {
         while (running.get()) {
             try {
                 T item = producer.get();
                 if (item != null) {
                     queue.put(item);
                     itemsProduced.incrementAndGet();
-                }
-                
-                if (delayMs > 0) {
-                    Thread.sleep(delayMs);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -115,16 +111,12 @@ public class DefaultProducerConsumerService<T extends Item<?>> implements Produc
         }
     }
     
-    private void runConsumer(int consumerId, Consumer<T> consumer, long delayMs) {
+    private void runConsumer(int consumerId, Consumer<T> consumer) {
         while (running.get()) {
             try {
                 T item = queue.take();
                 consumer.accept(item);
                 itemsConsumed.incrementAndGet();
-                
-                if (delayMs > 0) {
-                    Thread.sleep(delayMs);
-                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
