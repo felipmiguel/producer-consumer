@@ -16,7 +16,7 @@ class DefaultProducerConsumerServiceTest {
     @BeforeEach
     void setUp() {
         service = new DefaultProducerConsumerService<>();
-        config = new ProducerConsumerConfig(1, 1, 10, 100, 100);
+        config = new ProducerConsumerConfig(1, 1, 10);
     }
     
     @AfterEach
@@ -78,7 +78,7 @@ class DefaultProducerConsumerServiceTest {
             consumedCount.incrementAndGet();
         };
         
-        ProducerConsumerConfig testConfig = new ProducerConsumerConfig(1, 1, 10, 50, 50);
+        ProducerConsumerConfig testConfig = new ProducerConsumerConfig(1, 1, 10);
         service.start(testConfig, producer, consumer);
         
         Thread.sleep(300); // Let it run for a bit
