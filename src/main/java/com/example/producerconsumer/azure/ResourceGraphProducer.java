@@ -8,7 +8,6 @@ import com.azure.resourcemanager.resourcegraph.models.QueryRequest;
 import com.azure.resourcemanager.resourcegraph.models.QueryRequestOptions;
 import com.azure.resourcemanager.resourcegraph.models.QueryResponse;
 import com.azure.resourcemanager.resourcegraph.models.ResultFormat;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
@@ -19,7 +18,6 @@ public class ResourceGraphProducer<T> {
     private final int consumersCount;
 
     private static final AzureProfile azureProfile = new AzureProfile(AzureEnvironment.AZURE);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final ResourceGraphManager graphManager = ResourceGraphManager
             .authenticate(new DefaultAzureCredentialBuilder().build(), azureProfile);
