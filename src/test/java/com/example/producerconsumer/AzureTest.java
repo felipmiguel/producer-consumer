@@ -37,6 +37,4 @@ public class AzureTest {
         }
         assertThat(queue).isEmpty();
     }
-
-
 }
