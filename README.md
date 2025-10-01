@@ -9,6 +9,8 @@ A Java 21 project using Gradle that provides a generic producer-consumer interfa
 - **Thread-Safe**: Uses blocking queues for safe concurrent processing
 - **Statistics**: Real-time monitoring of production/consumption rates and queue status
 - **Flexible Configuration**: Adjustable queue capacity and processing delays
+- **Competing Consumer Pattern**: Direct BlockingQueue implementation with poison pill pattern for graceful shutdown
+- **Azure Integration**: Built-in support for Azure Resource Graph with pagination
 
 ## Project Structure
 
@@ -20,7 +22,10 @@ src/main/java/com/example/producerconsumer/
 ├── ProducerConsumerConfig.java         # Configuration class
 ├── ProcessingStats.java                # Statistics tracking
 ├── SimpleItem.java                     # Simple item implementation
-└── App.java                            # Demo application
+├── App.java                            # Demo application
+└── azure/
+    ├── ResourceGraphProducer.java      # Azure Resource Graph producer
+    └── ResourceGraphConsumer.java      # Competing consumer implementation
 ```
 
 ## Quick Start
@@ -113,6 +118,54 @@ public class MyCustomItem implements Item<MyData> {
 }
 ```
 
+### Competing Consumer Pattern (Azure Resource Graph Example)
+
+The project also includes a direct BlockingQueue-based implementation using the competing consumer pattern with poison pill for graceful shutdown. This approach is demonstrated with Azure Resource Graph integration:
+
+```java
+import com.example.producerconsumer.azure.ResourceGraphConsumer;
+import com.example.producerconsumer.azure.ResourceGraphProducer;
+import java.util.Map;
+import java.util.concurrent.*;
+
+// Configure the number of competing consumers
+int numberOfConsumers = 10;
+
+// Create a shared queue for all consumers
+BlockingQueue<Map<String, Object>> queue = new LinkedBlockingQueue<>(100);
+
+// Define a poison pill to signal completion
+Map<String, Object> poisonPill = Map.of("poison", "pill");
+
+// Create the producer with consumer count (for poison pills)
+ResourceGraphProducer<Map<String, Object>> producer = 
+    new ResourceGraphProducer<>(queue, poisonPill, numberOfConsumers);
+
+// Start consumer threads
+ExecutorService executor = Executors.newFixedThreadPool(numberOfConsumers);
+for (int i = 0; i < numberOfConsumers; i++) {
+    executor.submit(() -> {
+        ResourceGraphConsumer<Map<String, Object>> consumer = 
+            new ResourceGraphConsumer<>(queue, poisonPill);
+        consumer.startConsuming();
+    });
+}
+
+// Start producing (this will query Azure Resource Graph)
+producer.startProducing();
+
+// Wait for all consumers to finish
+executor.shutdown();
+executor.awaitTermination(1, TimeUnit.HOURS);
+```
+
+**Key Features of this Pattern:**
+- **Competing Consumers**: Multiple consumer threads process items from a single shared queue
+- **Poison Pill Pattern**: Producer sends a poison pill for each consumer to signal completion
+- **Direct BlockingQueue**: Uses `BlockingQueue.take()` and `put()` for thread-safe operations
+- **No Wrapper Interface**: Works directly with your data types (e.g., `Map<String, Object>`)
+- **Azure Integration**: Designed for processing Azure Resource Graph query results with pagination support
+
 ## API Reference
 
 ### ProducerConsumerService Interface
@@ -139,6 +192,25 @@ public class MyCustomItem implements Item<MyData> {
 - `runTimeMs` - Total runtime
 - `productionRate` - Items produced per second
 - `consumptionRate` - Items consumed per second
+
+### ResourceGraphProducer (Azure Integration)
+
+A specialized producer for Azure Resource Graph queries:
+
+- `ResourceGraphProducer(queue, poisonPill, consumersCount)` - Constructor
+  - `queue` - Shared BlockingQueue for all consumers
+  - `poisonPill` - Sentinel value to signal completion
+  - `consumersCount` - Number of consumers (determines poison pills to send)
+- `startProducing()` - Queries Azure Resource Graph and adds results to queue with pagination support
+
+### ResourceGraphConsumer (Competing Consumer)
+
+A consumer that processes items from a shared queue:
+
+- `ResourceGraphConsumer(queue, poisonPill)` - Constructor
+  - `queue` - Shared BlockingQueue with producer and other consumers
+  - `poisonPill` - Sentinel value that signals when to stop consuming
+- `startConsuming()` - Continuously processes items until receiving poison pill
 
 ## Requirements
 
