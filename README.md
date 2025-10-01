@@ -55,42 +55,48 @@ This will run a demo with 2 producers and 3 consumers processing string messages
 ### Basic Example
 
 ```java
-import com.example.producerconsumer.*;
+
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 // Create configuration: 2 producers, 3 consumers
 ProducerConsumerConfig config = new ProducerConsumerConfig(
-    2,    // number of producers
-    3,    // number of consumers
-    50,   // queue capacity
-    500,  // producer delay (ms)
-    800   // consumer delay (ms)
+        2,    // number of producers
+        3,    // number of consumers
+        50,   // queue capacity
+        500,  // producer delay (ms)
+        800   // consumer delay (ms)
 );
 
-// Create service
-ProducerConsumerService<SimpleItem<String>> service = new DefaultProducerConsumerService<>();
+        // Create service
+        ProducerConsumerService<SimpleItem<String>> service = new DefaultProducerConsumerService<>();
 
-// Define producer function
-Supplier<SimpleItem<String>> producer = () -> {
-    String data = "Item-" + System.currentTimeMillis();
-    return new SimpleItem<>(data);
-};
+        // Define producer function
+        Supplier<SimpleItem<String>> producer = () -> {
+            String data = "Item-" + System.currentTimeMillis();
+            return new SimpleItem<>(data);
+        };
 
-// Define consumer function
-Consumer<SimpleItem<String>> consumer = (item) -> {
-    System.out.println("Processing: " + item.getData());
-};
+        // Define consumer function
+        Consumer<SimpleItem<String>> consumer = (item) -> {
+            System.out.println("Processing: " + item.getData());
+        };
 
 // Start the system
-service.start(config, producer, consumer);
+service.
 
-// Monitor statistics
-ProcessingStats stats = service.getStats();
-System.out.println("Stats: " + stats);
+        start(config, producer, consumer);
+
+        // Monitor statistics
+        ProcessingStats stats = service.getStats();
+System.out.
+
+        println("Stats: "+stats);
 
 // Stop the system
-service.stop();
+service.
+
+        stop();
 ```
 
 ### Custom Item Implementation
