@@ -1,4 +1,4 @@
-package com.example.producerconsumer.azure;
+package com.batec.producerconsumer.azure;
 
 import java.util.concurrent.BlockingQueue;
 

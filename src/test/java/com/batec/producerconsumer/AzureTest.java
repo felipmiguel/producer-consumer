@@ -1,7 +1,7 @@
-package com.example.producerconsumer;
+package com.batec.producerconsumer;
 
-import com.example.producerconsumer.azure.ResourceGraphConsumer;
-import com.example.producerconsumer.azure.ResourceGraphProducer;
+import com.batec.producerconsumer.azure.ResourceGraphConsumer;
+import com.batec.producerconsumer.azure.ResourceGraphProducer;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

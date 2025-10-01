@@ -1,4 +1,4 @@
-package com.example.producerconsumer.azure;
+package com.batec.producerconsumer.azure;
 
 import com.azure.core.management.AzureEnvironment;
 import com.azure.core.management.profile.AzureProfile;
