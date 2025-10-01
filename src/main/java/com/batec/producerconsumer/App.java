@@ -1,16 +1,14 @@
 package com.batec.producerconsumer;
 
-import java.util.Random;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import com.batec.producerconsumer.azure.ResourceGraphProcessor;
 
 /**
  * Sample application demonstrating the producer-consumer system.
  */
 public class App {
-    private static final Random RANDOM = new Random();
-    
-    public static void main(String[] args) throws InterruptedException {
 
+    public static void main(String[] args) {
+        ResourceGraphProcessor processor = new ResourceGraphProcessor();
+        processor.process();
     }
 }
