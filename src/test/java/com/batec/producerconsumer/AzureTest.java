@@ -1,6 +1,7 @@
 package com.batec.producerconsumer;
 
 import com.batec.producerconsumer.azure.ResourceGraphConsumer;
+import com.batec.producerconsumer.azure.ResourceGraphProcessor;
 import com.batec.producerconsumer.azure.ResourceGraphProducer;
 import org.junit.jupiter.api.Test;
 
@@ -36,5 +37,11 @@ public class AzureTest {
 
         }
         assertThat(queue).isEmpty();
+    }
+
+    @Test
+    void processResourceGraph() {
+        ResourceGraphProcessor processor = new ResourceGraphProcessor();
+        processor.process();
     }
 }
