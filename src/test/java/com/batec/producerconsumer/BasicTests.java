@@ -2,6 +2,7 @@ package com.batec.producerconsumer;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,14 +18,14 @@ public class BasicTests {
         AtomicBoolean completed = new AtomicBoolean(false);
         ProcessConfiguration<Integer> config = new ProcessConfiguration<>();
         config.setBufferSize(10);
-        config.setProducerCount(1);
-        config.setConsumerCount(10);
+        config.setProducerCount(5);
+        config.setConsumerCount(20);
         config.setProducer(producerQueue -> {
             for (int i = 0; i < 100; i++) {
                 try {
                     producerQueue.put(i);
                     producedCount.incrementAndGet();
-                    Thread.sleep(2);
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(2, 5)); // Random sleep between 5-14 ms
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -37,12 +38,13 @@ public class BasicTests {
                     Integer item = consumerQueue.poll(10, TimeUnit.MILLISECONDS);
                     if (item != null) {
                         consumedCount.incrementAndGet();
-                        Thread.sleep(8);
+                        Thread.sleep(ThreadLocalRandom.current().nextInt(5, 15)); // Random sleep between 5-14 ms
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
+            System.out.println("Consumer finished processing" + Thread.currentThread().getName());
         });
         ProducerConsumerCoordinator.doWork(config).thenAccept(nothing -> {
             assertThat(producedCount.get()).isEqualTo(consumedCount.get());
