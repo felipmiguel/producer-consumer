@@ -25,7 +25,7 @@ public class BasicTests {
                 try {
                     producerQueue.put(i);
                     producedCount.incrementAndGet();
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(2, 5)); // Random sleep between 5-14 ms
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(2, 5)); // Random sleep between 2-5 ms
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
