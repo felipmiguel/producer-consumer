@@ -66,6 +66,8 @@ ProcessConfiguration<String> config = new ProcessConfiguration<>();
 config.setProducerCount(2);    // Number of producer threads
 config.setConsumerCount(5);     // Number of consumer threads
 config.setBufferSize(50);       // Queue capacity
+config.setProducerTerminationTimeout(10);  // Wait up to 10 seconds for producers to terminate
+config.setConsumerTerminationTimeout(10);  // Wait up to 10 seconds for consumers to terminate
 
 // Define producer function
 config.setProducer((ProducerQueue<String> queue) -> {
@@ -217,6 +219,8 @@ Configuration object for producer-consumer workflows.
 - `producerCount: int` - Number of producer threads
 - `consumerCount: int` - Number of consumer threads
 - `bufferSize: int` - Maximum queue capacity
+- `producerTerminationTimeout: long` - Timeout in seconds to await producer ExecutorService termination (default: 1 second)
+- `consumerTerminationTimeout: long` - Timeout in seconds to await consumer ExecutorService termination (default: 1 second)
 
 ### ProducerQueue<T>
 

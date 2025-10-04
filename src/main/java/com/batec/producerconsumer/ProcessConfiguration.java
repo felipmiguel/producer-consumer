@@ -8,6 +8,8 @@ public class ProcessConfiguration<T> {
     private int bufferSize;
     private int producerCount;
     private int consumerCount;
+    private long producerTerminationTimeout = 1; // default 1 second
+    private long consumerTerminationTimeout = 1; // default 1 second
 
 
     public Consumer<ProducerQueue<T>> getProducer() {
@@ -48,5 +50,21 @@ public class ProcessConfiguration<T> {
 
     public void setConsumerCount(int consumerCount) {
         this.consumerCount = consumerCount;
+    }
+
+    public long getProducerTerminationTimeout() {
+        return producerTerminationTimeout;
+    }
+
+    public void setProducerTerminationTimeout(long producerTerminationTimeout) {
+        this.producerTerminationTimeout = producerTerminationTimeout;
+    }
+
+    public long getConsumerTerminationTimeout() {
+        return consumerTerminationTimeout;
+    }
+
+    public void setConsumerTerminationTimeout(long consumerTerminationTimeout) {
+        this.consumerTerminationTimeout = consumerTerminationTimeout;
     }
 }
