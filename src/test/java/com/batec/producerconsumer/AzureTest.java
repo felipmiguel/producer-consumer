@@ -19,7 +19,8 @@ public class AzureTest {
         Map<String, Object> poisonPill = Map.of("poison", "pill");
         ResourceGraphProducer<Map<String, Object>> producer = new ResourceGraphProducer<>(queue, poisonPill, consumers);
         Future<?>[] consumersFutures = new Future[consumers];
-        try (ExecutorService executor = Executors.newFixedThreadPool(consumers)) {
+        ExecutorService executor = Executors.newFixedThreadPool(consumers);
+        try {
             for (int i = 0; i < consumers; i++) {
                 consumersFutures[i] = executor.submit(() -> {
                     ResourceGraphConsumer<Map<String, Object>> consumer = new ResourceGraphConsumer<>(queue, poisonPill);
@@ -35,6 +36,8 @@ public class AzureTest {
                 }
             }
 
+        } finally {
+            executor.shutdown();
         }
         assertThat(queue).isEmpty();
     }

@@ -47,7 +47,7 @@ public class ProducerConsumerCoordinator {
 
         CompletableFuture<Void> allDone = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         return allDone.whenComplete((result, throwable) -> {
-            shutdownExecutors(producerExecutor, consumerExecutor);
+            shutdownExecutors(producerExecutor, consumerExecutor, configuration);
             if (throwable != null) {
                 LOG.error("Error occurred during processing", throwable);
             } else {
@@ -56,19 +56,19 @@ public class ProducerConsumerCoordinator {
         });
     }
 
-    private static void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor) {
+    private static <T> void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor, ProcessConfiguration<T> configuration) {
         LOG.debug("All tasks completed. Shutting down executors.");
         producerExecutor.shutdown();
         consumerExecutor.shutdown();
         try {
-            if (!producerExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (!producerExecutor.awaitTermination(configuration.getProducerTerminationTimeout(), TimeUnit.SECONDS)) {
                 producerExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {
             LOG.error("Producer executor shutdown interrupted", e);
         }
         try {
-            if (!consumerExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (!consumerExecutor.awaitTermination(configuration.getConsumerTerminationTimeout(), TimeUnit.SECONDS)) {
                 consumerExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {

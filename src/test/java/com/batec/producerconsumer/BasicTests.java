@@ -52,4 +52,44 @@ public class BasicTests {
         }).join();
         assertThat(completed.get()).isTrue();
     }
+
+    @Test
+    void testTimeoutConfiguration() {
+        ProcessConfiguration<String> config = new ProcessConfiguration<>();
+        config.setBufferSize(5);
+        config.setProducerCount(1);
+        config.setConsumerCount(1);
+        config.setProducerTerminationTimeout(10);
+        config.setConsumerTerminationTimeout(5);
+        
+        // Verify the timeout values are set correctly
+        assertThat(config.getProducerTerminationTimeout()).isEqualTo(10);
+        assertThat(config.getConsumerTerminationTimeout()).isEqualTo(5);
+        
+        config.setProducer(producerQueue -> {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    producerQueue.put("Item-" + i);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            producerQueue.complete();
+        });
+        config.setConsumer(consumerQueue -> {
+            while (!consumerQueue.completed()) {
+                try {
+                    String item = consumerQueue.poll(10, TimeUnit.MILLISECONDS);
+                    if (item != null) {
+                        // Process item
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        
+        // This should complete without issues using the configured timeouts
+        ProducerConsumerCoordinator.doWork(config).join();
+    }
 }
