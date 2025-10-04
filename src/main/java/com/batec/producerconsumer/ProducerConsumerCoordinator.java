@@ -1,9 +1,14 @@
 package com.batec.producerconsumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -11,6 +16,9 @@ import java.util.function.Consumer;
  *
  */
 public class ProducerConsumerCoordinator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProducerConsumerCoordinator.class);
+
     /**
      * Starts the producer and consumer tasks based on the provided configuration.
      *
@@ -37,14 +45,46 @@ public class ProducerConsumerCoordinator {
             futures.add(CompletableFuture.runAsync(() -> consumer.accept(queue), consumerExecutor));
         }
 
-
         CompletableFuture<Void> allDone = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        allDone.whenComplete((result, throwable) -> {
-            System.out.println("All tasks completed. Shutting down executors.");
-            producerExecutor.shutdown();
-            consumerExecutor.shutdown();
+//        return allDone.handle((result, throwable) -> {
+//            shutdownExecutors(producerExecutor, consumerExecutor);
+//            if (throwable != null) {
+//                LOG.error("Error occurred during processing", throwable);
+//                queue.fail(throwable);
+//            } else {
+//                LOG.debug("Processing completed successfully");
+//                queue.complete();
+//            }
+//            return null;
+//        });
+        return allDone.whenComplete((result, throwable) -> {
+            shutdownExecutors(producerExecutor, consumerExecutor);
+            if( throwable != null) {
+                LOG.error("Error occurred during processing", throwable);
+            } else {
+                LOG.debug("Processing completed successfully");
+            }
         });
-        return allDone;
 
+    }
+
+    private static void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor) {
+        LOG.debug("All tasks completed. Shutting down executors.");
+        producerExecutor.shutdown();
+        consumerExecutor.shutdown();
+        try {
+            if (!producerExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                producerExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            LOG.error("Producer executor shutdown interrupted", e);
+        }
+        try {
+            if (!consumerExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                consumerExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            LOG.error("Consumer executor shutdown interrupted", e);
+        }
     }
 }
