@@ -1,6 +1,7 @@
 package com.batec.producerconsumer;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DefaultProducerConsumerQueue<T> extends LinkedBlockingQueue<T> implements ProducerConsumerQueue<T> {
 
@@ -12,21 +13,21 @@ public class DefaultProducerConsumerQueue<T> extends LinkedBlockingQueue<T> impl
         super(capacity);
     }
 
-    private volatile boolean completed = false;
+    private final AtomicBoolean completed = new AtomicBoolean(false);
 
     @Override
     public boolean completed() {
-        return completed && this.isEmpty();
+        return completed.get() && this.isEmpty();
     }
 
     @Override
     public void complete() {
-        this.completed = true;
+        this.completed.set(true);
     }
 
     @Override
     public void fail(Throwable t) {
-        this.completed = true;
+        this.completed.set(true);
         throw new RuntimeException(t);
     }
 }
