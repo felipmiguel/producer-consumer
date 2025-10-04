@@ -15,6 +15,7 @@ import com.batec.producerconsumer.ProducerQueue;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class ResourceGraphProcessor {
 
@@ -69,8 +70,10 @@ public class ResourceGraphProcessor {
     private void consume(ConsumerQueue<Map<String, Object>> consumerQueue) {
         while (!consumerQueue.completed()) {
             try {
-                Map<String, Object> item = consumerQueue.take();
-                processItem(item);
+                Map<String, Object> item = consumerQueue.poll(10, TimeUnit.MILLISECONDS);
+                if (item != null) {
+                    processItem(item);
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

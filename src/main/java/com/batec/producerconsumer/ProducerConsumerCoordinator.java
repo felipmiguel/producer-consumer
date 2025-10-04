@@ -19,25 +19,32 @@ public class ProducerConsumerCoordinator {
      * @return A CompletableFuture that completes when all producer and consumer tasks are done.
      */
     public static <T> CompletableFuture<Void> doWork(ProcessConfiguration<T> configuration) {
-        try (var producerExecutor = Executors.newFixedThreadPool(configuration.getProducerCount());
-             var consumerExecutor = Executors.newFixedThreadPool(configuration.getConsumerCount())) {
-            int producerCount = configuration.getProducerCount();
-            int consumerCount = configuration.getConsumerCount();
-            Consumer<ProducerQueue<T>> producer = configuration.getProducer();
-            Consumer<ConsumerQueue<T>> consumer = configuration.getConsumer();
-            int bufferSize = configuration.getBufferSize();
-            DefaultProducerConsumerQueue<T> queue = new DefaultProducerConsumerQueue<>(bufferSize);
+        var producerExecutor = Executors.newFixedThreadPool(configuration.getProducerCount());
+        var consumerExecutor = Executors.newFixedThreadPool(configuration.getConsumerCount());
+        int producerCount = configuration.getProducerCount();
+        int consumerCount = configuration.getConsumerCount();
+        Consumer<ProducerQueue<T>> producer = configuration.getProducer();
+        Consumer<ConsumerQueue<T>> consumer = configuration.getConsumer();
+        int bufferSize = configuration.getBufferSize();
+        DefaultProducerConsumerQueue<T> queue = new DefaultProducerConsumerQueue<>(bufferSize);
 
-            List<CompletableFuture<?>> futures = new ArrayList<>(producerCount + consumerCount);
-            for (int i = 0; i < configuration.getProducerCount(); i++) {
-                futures.add(CompletableFuture.runAsync(() -> producer.accept(queue), producerExecutor));
-            }
-
-            for (int i = 0; i < consumerCount; i++) {
-                futures.add(CompletableFuture.runAsync(() -> consumer.accept(queue), consumerExecutor));
-            }
-
-            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        List<CompletableFuture<?>> futures = new ArrayList<>(producerCount + consumerCount);
+        for (int i = 0; i < configuration.getProducerCount(); i++) {
+            futures.add(CompletableFuture.runAsync(() -> producer.accept(queue), producerExecutor));
         }
+
+        for (int i = 0; i < consumerCount; i++) {
+            futures.add(CompletableFuture.runAsync(() -> consumer.accept(queue), consumerExecutor));
+        }
+
+
+        CompletableFuture<Void> allDone = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allDone.whenComplete((result, throwable) -> {
+            System.out.println("All tasks completed. Shutting down executors.");
+            producerExecutor.shutdown();
+            consumerExecutor.shutdown();
+        });
+        return allDone;
+
     }
 }
