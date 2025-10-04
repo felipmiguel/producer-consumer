@@ -48,7 +48,7 @@ public class ProducerConsumerCoordinator {
         CompletableFuture<Void> allDone = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         return allDone.whenComplete((result, throwable) -> {
             shutdownExecutors(producerExecutor, consumerExecutor);
-            if( throwable != null) {
+            if (throwable != null) {
                 LOG.error("Error occurred during processing", throwable);
             } else {
                 LOG.debug("Processing completed successfully");
