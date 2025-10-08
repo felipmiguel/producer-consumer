@@ -38,7 +38,13 @@ public class ProducerConsumerCoordinator {
 
         List<CompletableFuture<?>> futures = new ArrayList<>(producerCount + consumerCount);
         for (int i = 0; i < configuration.getProducerCount(); i++) {
-            futures.add(CompletableFuture.runAsync(() -> producer.accept(queue), producerExecutor));
+            futures.add(CompletableFuture.runAsync(() -> {
+                try {
+                    producer.accept(queue);
+                } catch (Exception e) {
+                    queue.fail(e);
+                }
+            }, producerExecutor));
         }
 
         for (int i = 0; i < consumerCount; i++) {

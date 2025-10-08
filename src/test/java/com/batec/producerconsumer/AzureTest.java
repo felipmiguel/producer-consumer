@@ -3,6 +3,7 @@ package com.batec.producerconsumer;
 import com.batec.producerconsumer.azure.ResourceGraphConsumer;
 import com.batec.producerconsumer.azure.ResourceGraphProcessor;
 import com.batec.producerconsumer.azure.ResourceGraphProducer;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Tag("ci-skip")
 public class AzureTest {
 
     @Test

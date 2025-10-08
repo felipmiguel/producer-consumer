@@ -29,4 +29,12 @@ application {
 
 tasks.named('test') {
     useJUnitPlatform()
+    doFirst {
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            useJUnitPlatform {
+                excludeTags excludeTagsProp
+            }
+        }
+    }
 }
