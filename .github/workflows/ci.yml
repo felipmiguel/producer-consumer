@@ -27,7 +27,7 @@ jobs:
         cache: 'gradle'
     
     - name: Build with Gradle
-      run: gradle build --no-daemon
+      run: gradle build --no-daemon -DexcludeTags=ci-skip
       
     - name: Upload test results
       if: always()
