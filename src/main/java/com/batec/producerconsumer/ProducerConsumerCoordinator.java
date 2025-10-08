@@ -64,8 +64,6 @@ public class ProducerConsumerCoordinator {
 
     private static <T> void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor, ProcessConfiguration<T> configuration) {
         LOG.debug("All tasks completed. Shutting down executors.");
-        producerExecutor.shutdown();
-        consumerExecutor.shutdown();
         try {
             if (!producerExecutor.awaitTermination(configuration.getProducerTerminationTimeout(), TimeUnit.SECONDS)) {
                 producerExecutor.shutdownNow();
