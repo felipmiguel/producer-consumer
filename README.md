@@ -24,9 +24,7 @@ src/main/java/com/batec/producerconsumer/
 ├── DefaultProducerConsumerQueue.java   # Default queue implementation
 ├── App.java                            # Demo application
 └── azure/
-    ├── ResourceGraphProcessor.java     # Azure Resource Graph processor using coordinator
-    ├── ResourceGraphProducer.java      # Legacy producer with poison pill pattern
-    └── ResourceGraphConsumer.java      # Legacy consumer with poison pill pattern
+    └── ResourceGraphProcessor.java     # Azure Resource Graph processor using coordinator
 ```
 
 ## Quick Start
@@ -154,49 +152,6 @@ public class ResourceGraphProcessor {
 }
 ```
 
-### Alternative: Legacy Poison Pill Pattern
-
-The project also includes a legacy implementation using the poison pill pattern for explicit control:
-
-```java
-import com.batec.producerconsumer.azure.ResourceGraphConsumer;
-import com.batec.producerconsumer.azure.ResourceGraphProducer;
-import java.util.Map;
-import java.util.concurrent.*;
-
-// Configure the number of competing consumers
-int numberOfConsumers = 10;
-
-// Create a shared queue for all consumers
-BlockingQueue<Map<String, Object>> queue = new LinkedBlockingQueue<>(100);
-
-// Define a poison pill to signal completion
-Map<String, Object> poisonPill = Map.of("poison", "pill");
-
-// Create the producer with consumer count (for poison pills)
-ResourceGraphProducer<Map<String, Object>> producer = 
-    new ResourceGraphProducer<>(queue, poisonPill, numberOfConsumers);
-
-// Start consumer threads
-ExecutorService executor = Executors.newFixedThreadPool(numberOfConsumers);
-for (int i = 0; i < numberOfConsumers; i++) {
-    executor.submit(() -> {
-        ResourceGraphConsumer<Map<String, Object>> consumer = 
-            new ResourceGraphConsumer<>(queue, poisonPill);
-        consumer.startConsuming();
-    });
-}
-
-// Start producing (this will query Azure Resource Graph)
-producer.startProducing();
-
-// Wait for all consumers to finish
-executor.shutdown();
-executor.awaitTermination(1, TimeUnit.HOURS);
-```
-
-**Note:** This approach is maintained for backward compatibility. The `ProducerConsumerCoordinator.doWork()` method is the preferred approach for new code.
-
 ## API Reference
 
 ### ProducerConsumerCoordinator
@@ -238,27 +193,6 @@ Interface for consumers to retrieve items from the queue.
 **Methods:**
 - `take()` - Retrieves and removes an item from the queue (blocks if queue is empty)
 - `completed()` - Returns `true` if production is complete and queue is empty
-
-### Legacy Classes (Backward Compatibility)
-
-#### ResourceGraphProducer<T>
-
-Legacy producer for Azure Resource Graph queries using poison pill pattern:
-
-- `ResourceGraphProducer(queue, poisonPill, consumersCount)` - Constructor
-  - `queue` - Shared BlockingQueue for all consumers
-  - `poisonPill` - Sentinel value to signal completion
-  - `consumersCount` - Number of consumers (determines poison pills to send)
-- `startProducing()` - Queries Azure Resource Graph and adds results to queue with pagination support
-
-#### ResourceGraphConsumer<T>
-
-Legacy consumer that processes items from a shared queue:
-
-- `ResourceGraphConsumer(queue, poisonPill)` - Constructor
-  - `queue` - Shared BlockingQueue with producer and other consumers
-  - `poisonPill` - Sentinel value that signals when to stop consuming
-- `startConsuming()` - Continuously processes items until receiving poison pill
 
 ## Requirements
 
