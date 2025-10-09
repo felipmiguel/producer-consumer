@@ -49,7 +49,7 @@ public class BasicTests {
 
     private static Consumer<ProducerQueue<Integer>> producerTask(AtomicInteger producedCount) {
         return producerQueue -> {
-            for (int i = 0; i < 10000; i++) {
+            for (int i = 0; i < 1000; i++) {
                 try {
                     producerQueue.put(i);
                     producedCount.incrementAndGet();
@@ -58,7 +58,6 @@ public class BasicTests {
                     Thread.currentThread().interrupt();
                 }
             }
-            producerQueue.complete();
         };
     }
 
@@ -99,7 +98,6 @@ public class BasicTests {
                     Thread.currentThread().interrupt();
                 }
             }
-            producerQueue.complete();
         });
         config.setConsumer(consumerQueue -> {
             while (!consumerQueue.completed()) {

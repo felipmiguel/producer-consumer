@@ -36,30 +36,38 @@ public class ProducerConsumerCoordinator {
         int bufferSize = configuration.getBufferSize();
         DefaultProducerConsumerQueue<T> queue = new DefaultProducerConsumerQueue<>(bufferSize);
 
-        List<CompletableFuture<?>> futures = new ArrayList<>(producerCount + consumerCount);
+
+        List<CompletableFuture<?>> producerFutures = new ArrayList<>(producerCount);
         for (int i = 0; i < configuration.getProducerCount(); i++) {
-            futures.add(CompletableFuture.runAsync(() -> {
-                try {
-                    producer.accept(queue);
-                } catch (Exception e) {
-                    queue.fail(e);
-                }
-            }, producerExecutor));
+            var producerFuture = CompletableFuture.runAsync(() -> producer.accept(queue), producerExecutor);
+            producerFutures.add(producerFuture);
         }
+        // When all producers are done, complete or fail the queue accordingly
+        CompletableFuture<Void> allProducersDone = CompletableFuture.allOf(producerFutures.toArray(new CompletableFuture[0]))
+                .handle((nothing, ex) -> {
+                    if (ex != null) {
+                        queue.fail(ex);
+                    } else {
+                        queue.complete();
+                    }
+                    return null;
+                });
 
+        List<CompletableFuture<?>> consumerFutures = new ArrayList<>(producerCount + consumerCount);
         for (int i = 0; i < consumerCount; i++) {
-            futures.add(CompletableFuture.runAsync(() -> consumer.accept(queue), consumerExecutor));
+            consumerFutures.add(CompletableFuture.runAsync(() -> consumer.accept(queue), consumerExecutor));
         }
 
-        CompletableFuture<Void> allDone = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        return allDone.whenComplete((result, throwable) -> {
-            shutdownExecutors(producerExecutor, consumerExecutor, configuration);
-            if (throwable != null) {
-                LOG.error("Error occurred during processing", throwable);
-            } else {
-                LOG.debug("Processing completed successfully");
-            }
-        });
+        return allProducersDone
+                .thenCompose(nothing -> CompletableFuture.allOf(consumerFutures.toArray(new CompletableFuture[0])))
+                .whenComplete((result, throwable) -> {
+                    shutdownExecutors(producerExecutor, consumerExecutor, configuration);
+                    if (throwable != null) {
+                        LOG.error("Error occurred during processing", throwable);
+                    } else {
+                        LOG.debug("Processing completed successfully");
+                    }
+                });
     }
 
     private static <T> void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor, ProcessConfiguration<T> configuration) {
