@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.batec'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':producer-consumer-core')
+    implementation 'com.azure.resourcemanager:azure-resourcemanager-resourcegraph:1.1.0'
+    implementation 'com.azure:azure-identity:1.18.0'
+    
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'com.batec.producerconsumer.App'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    doFirst {
+        def excludeTagsProp = System.getProperty('excludeTags')
+        if (excludeTagsProp) {
+            useJUnitPlatform {
+                excludeTags excludeTagsProp
+            }
+        }
+    }
+}
