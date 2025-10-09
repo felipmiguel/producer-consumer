@@ -14,17 +14,31 @@ A Java 21 project using Gradle that provides a flexible producer-consumer coordi
 
 ## Project Structure
 
+This project is organized into two Gradle modules:
+
+### Core Library Module (`producer-consumer-core`)
+The core producer-consumer framework as a reusable library:
+
 ```
-src/main/java/com/batec/producerconsumer/
-├── ProducerConsumerCoordinator.java    # Main coordinator for producer-consumer workflows
-├── ProcessConfiguration.java           # Configuration class
-├── ProducerQueue.java                  # Producer queue interface
-├── ConsumerQueue.java                  # Consumer queue interface
-├── ProducerConsumerQueue.java          # Combined queue interface
-├── DefaultProducerConsumerQueue.java   # Default queue implementation
-├── App.java                            # Demo application
-└── azure/
-    └── ResourceGraphProcessor.java     # Azure Resource Graph processor using coordinator
+producer-consumer-core/
+└── src/main/java/com/batec/producerconsumer/
+    ├── ProducerConsumerCoordinator.java    # Main coordinator for producer-consumer workflows
+    ├── ProcessConfiguration.java           # Configuration class
+    ├── ProducerQueue.java                  # Producer queue interface
+    ├── ConsumerQueue.java                  # Consumer queue interface
+    ├── ProducerConsumerQueue.java          # Combined queue interface
+    └── DefaultProducerConsumerQueue.java   # Default queue implementation
+```
+
+### Samples Module (`producer-consumer-samples`)
+Sample applications demonstrating library usage:
+
+```
+producer-consumer-samples/
+└── src/main/java/com/batec/producerconsumer/
+    ├── App.java                            # Demo application entry point
+    └── azure/
+        └── ResourceGraphProcessor.java     # Azure Resource Graph processor example
 ```
 
 ## Quick Start
@@ -32,24 +46,64 @@ src/main/java/com/batec/producerconsumer/
 ### Running the Demo
 
 ```bash
-./gradlew run
+./gradlew :producer-consumer-samples:run
 ```
 
 This will run the Azure Resource Graph processor demo with 1 producer and 10 competing consumers.
 
 ### Building the Project
 
+Build all modules:
 ```bash
 ./gradlew build
 ```
 
+Build only the core library:
+```bash
+./gradlew :producer-consumer-core:build
+```
+
+Build only the samples:
+```bash
+./gradlew :producer-consumer-samples:build
+```
+
 ### Running Tests
 
+Run all tests:
 ```bash
 ./gradlew test
 ```
 
+Run tests for core library:
+```bash
+./gradlew :producer-consumer-core:test
+```
+
+Run tests for samples (excluding Azure integration test):
+```bash
+./gradlew :producer-consumer-samples:test -DexcludeTags=ci-skip
+```
+
 ## Usage
+
+### Using the Core Library in Your Project
+
+To use the producer-consumer-core library in your own Gradle project, add it as a dependency:
+
+```gradle
+dependencies {
+    implementation project(':producer-consumer-core')
+}
+```
+
+Or if published to a Maven repository:
+
+```gradle
+dependencies {
+    implementation 'com.batec:producer-consumer-core:1.0.0'
+}
+```
 
 ### Recommended Approach: Using ProducerConsumerCoordinator
 

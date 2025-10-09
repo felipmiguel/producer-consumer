@@ -1,1 +1,4 @@
 rootProject.name = 'producer-consumer'
+
+include 'producer-consumer-core'
+include 'producer-consumer-samples'
