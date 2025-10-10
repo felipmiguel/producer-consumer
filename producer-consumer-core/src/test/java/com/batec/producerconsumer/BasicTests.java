@@ -168,8 +168,6 @@ public class BasicTests {
         }
     }
 
-
-
     @Test
     void testTimeoutConfiguration() {
         WorkloadConfiguration<String> config = WorkloadConfiguration.<String>builder()
