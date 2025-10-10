@@ -15,9 +15,9 @@ import java.util.function.Consumer;
  * Coordinates the producer and consumer using a shared queue.
  *
  */
-public class ProducerConsumerCoordinator {
+public class WorkloadCoordinator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProducerConsumerCoordinator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WorkloadCoordinator.class);
 
     /**
      * Starts the producer and consumer tasks based on the provided configuration.
@@ -26,13 +26,18 @@ public class ProducerConsumerCoordinator {
      * @param configuration The configuration for the producer-consumer process.
      * @return A CompletableFuture that completes when all producer and consumer tasks are done.
      */
-    public static <T> CompletableFuture<Void> doWork(ProcessConfiguration<T> configuration) {
+    public static <T> CompletableFuture<Void> processWorkload(WorkloadConfiguration<T> configuration) {
         var producerExecutor = Executors.newFixedThreadPool(configuration.getProducerCount());
         var consumerExecutor = Executors.newFixedThreadPool(configuration.getConsumerCount());
         int producerCount = configuration.getProducerCount();
         int consumerCount = configuration.getConsumerCount();
         Consumer<ProducerQueue<T>> producer = configuration.getProducer();
-        Consumer<ConsumerQueue<T>> consumer = configuration.getConsumer();
+        Consumer<ConsumerQueue<T>> consumer;
+        if (configuration.getQueueConsumer() != null) {
+            consumer = configuration.getQueueConsumer();
+        } else {
+            consumer = defaultConsumer(configuration.getItemConsumer());
+        }
         int bufferSize = configuration.getBufferSize();
         DefaultProducerConsumerQueue<T> queue = new DefaultProducerConsumerQueue<>(bufferSize);
 
@@ -70,17 +75,35 @@ public class ProducerConsumerCoordinator {
                 });
     }
 
-    private static <T> void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor, ProcessConfiguration<T> configuration) {
+    private static <T> Consumer<ConsumerQueue<T>> defaultConsumer(Consumer<T> itemConsumer) {
+        return consumerQueue -> {
+            while (!consumerQueue.completed()) {
+                try {
+                    T item = consumerQueue.poll(10, TimeUnit.MILLISECONDS);
+                    if (item != null && itemConsumer != null) {
+                        itemConsumer.accept(item);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            LOG.debug("Consumer finished processing " + Thread.currentThread().getName());
+        };
+    }
+
+    private static <T> void shutdownExecutors(ExecutorService producerExecutor, ExecutorService consumerExecutor, WorkloadConfiguration<T> configuration) {
         LOG.debug("All tasks completed. Shutting down executors.");
         try {
-            if (!producerExecutor.awaitTermination(configuration.getProducerTerminationTimeout(), TimeUnit.SECONDS)) {
+            if (!producerExecutor.awaitTermination(
+                    configuration.getProducerTerminationTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
                 producerExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {
             LOG.error("Producer executor shutdown interrupted", e);
         }
         try {
-            if (!consumerExecutor.awaitTermination(configuration.getConsumerTerminationTimeout(), TimeUnit.SECONDS)) {
+            if (!consumerExecutor.awaitTermination(
+                    configuration.getConsumerTerminationTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
                 consumerExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {
