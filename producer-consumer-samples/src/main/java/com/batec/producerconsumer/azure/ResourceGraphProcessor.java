@@ -9,8 +9,8 @@ import com.azure.resourcemanager.resourcegraph.models.QueryRequestOptions;
 import com.azure.resourcemanager.resourcegraph.models.QueryResponse;
 import com.azure.resourcemanager.resourcegraph.models.ResultFormat;
 import com.batec.producerconsumer.ConsumerQueue;
-import com.batec.producerconsumer.ProcessConfiguration;
-import com.batec.producerconsumer.ProducerConsumerCoordinator;
+import com.batec.producerconsumer.WorkloadConfiguration;
+import com.batec.producerconsumer.WorkloadCoordinator;
 import com.batec.producerconsumer.ProducerQueue;
 
 import java.util.Map;
@@ -25,13 +25,14 @@ public class ResourceGraphProcessor {
             .authenticate(new DefaultAzureCredentialBuilder().build(), azureProfile);
 
     public void process() {
-        ProcessConfiguration<Map<String, Object>> config = new ProcessConfiguration<>();
-        config.setBufferSize(10);
-        config.setProducerCount(1);
-        config.setConsumerCount(10);
-        config.setProducer(this::produce);
-        config.setConsumer(this::consume);
-        ProducerConsumerCoordinator.doWork(config).join();
+        WorkloadConfiguration<Map<String, Object>> workload = WorkloadConfiguration.<Map<String, Object>>builder()
+                .bufferSize(10)
+                .producerCount(1)
+                .consumerCount(10)
+                .producer(this::produce)
+                .queueConsumer(this::consume)
+                .build();
+        WorkloadCoordinator.processWorkload(workload).join();
     }
 
     private void produce(ProducerQueue<Map<String, Object>> producerQueue) {
